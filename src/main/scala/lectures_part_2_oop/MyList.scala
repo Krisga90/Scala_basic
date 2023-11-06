@@ -1,7 +1,6 @@
 package lectures_part_2_oop
 
 abstract class MyList {
-
   def head: Int
   def tail: MyList
   def isEmpty: Boolean
