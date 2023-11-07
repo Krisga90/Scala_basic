@@ -29,11 +29,11 @@ abstract class MyListGeneric[+A] {
   def ++[B >: A](list: MyListGeneric[B]): MyListGeneric[B]
 }
 
-object EmptyGeneric extends MyListGeneric[Nothing] {
+case object EmptyGeneric extends MyListGeneric[Nothing] {
   def head: Nothing = throw new NoSuchElementException
   def tail: MyListGeneric[Nothing] =  throw new NoSuchElementException
   def isEmpty: Boolean = true
-  def add[B >: Nothing](element: B): MyListGeneric[B] = new ConsGeneric(element, EmptyGeneric)
+  def add[B >: Nothing](element: B): MyListGeneric[B] = ConsGeneric(element, EmptyGeneric)
 
   def printElements: String = ""
 
@@ -48,11 +48,11 @@ object EmptyGeneric extends MyListGeneric[Nothing] {
   }
 }
 
-class ConsGeneric[+A](h: A, t: MyListGeneric[A]) extends MyListGeneric[A] {
+case class ConsGeneric[+A](h: A, t: MyListGeneric[A]) extends MyListGeneric[A] {
   def head: A = h
   def tail: MyListGeneric[A] = t
   def isEmpty: Boolean = false
-  def add[B >: A](element: B): MyListGeneric[B] = new ConsGeneric(element, this)
+  def add[B >: A](element: B): MyListGeneric[B] = ConsGeneric(element, this)
 
   def printElements: String = {
     if (t.isEmpty) "" + h
@@ -81,11 +81,14 @@ class ConsGeneric[+A](h: A, t: MyListGeneric[A]) extends MyListGeneric[A] {
 }
 
 object ListTestGeneric extends App {
-  val listInt: MyListGeneric[Int] = new ConsGeneric(1, new ConsGeneric(2, new ConsGeneric(3, EmptyGeneric)))
+  val listInt: MyListGeneric[Int] = ConsGeneric(1, ConsGeneric(2, ConsGeneric(3, EmptyGeneric)))
+  val cloneIntLins: MyListGeneric[Int]= ConsGeneric(1, ConsGeneric(2, ConsGeneric(3, EmptyGeneric)))
   println(listInt.head)
   println(listInt)
 
-  val listString: MyListGeneric[String] = new ConsGeneric("a", new ConsGeneric("b", new ConsGeneric("c", EmptyGeneric)))
+
+  val listString: MyListGeneric[String] = ConsGeneric("a", ConsGeneric("b", ConsGeneric("c", EmptyGeneric)))
+
   println(listString.head)
   println(listString)
 
@@ -97,7 +100,7 @@ object ListTestGeneric extends App {
     override def test(elem: Int): Boolean = elem % 2 == 0
   }).toString)
 
-  val listInt2: MyListGeneric[Int] = new ConsGeneric(4, new ConsGeneric(5, EmptyGeneric))
+  val listInt2: MyListGeneric[Int] = ConsGeneric(4, ConsGeneric(5, EmptyGeneric))
   println((listInt ++ listInt2).toString)
 
   println(listInt.flatmap((new MyTransformer[Int, MyListGeneric[Int]]{
@@ -105,5 +108,10 @@ object ListTestGeneric extends App {
       new ConsGeneric[Int](elem, new ConsGeneric[Int](elem +1, EmptyGeneric))
     }
   })).toString)
+
+  println(cloneIntLins == listInt)
+
+
+
 
 }
