@@ -28,4 +28,13 @@ object AnonymousFunctions extends App {
   val niceIncrement_v3: (Int, Int) => Int = (x: Int, y: Int) => x + y
   val niceIncrement_v4: (Int, Int) => Int = _ + _
 
+
+//  def superAdder: Function1[Int, Function1[Int, Int]] = new Function1[Int, Function1[Int, Int]] {
+//    override def apply(v1: Int): Int => Int = {
+//      new Function1[Int, Int] {
+//        override def apply(v2: Int): Int = v1 + v2
+//      }
+//    }
+//  }
+  def supperAdder_v: Int => Int => Int = (x: Int) => (y: Int) => x + y
 }

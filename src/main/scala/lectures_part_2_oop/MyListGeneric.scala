@@ -86,25 +86,21 @@ object ListTestGeneric extends App {
   println(listString.head)
   println(listString)
 
-  println(listInt.map(new Function1[Int, Int]{
-    override def apply(elem: Int): Int = elem * 2
-  }).toString)
+//  println(listInt.map((x: Int) => x * 2).toString)
+  println(listInt.map(_ * 2).toString)
 
-  println(listInt.filter(new Function1[Int, Boolean]{
-    override def apply(elem: Int): Boolean = elem % 2 == 0
-  }).toString)
+//  println(listInt.filter((x: Int) => x % 2 == 0).toString)
+  println(listInt.filter(_ % 2 == 0).toString)
+
 
   val listInt2: MyListGeneric[Int] = ConsGeneric(4, ConsGeneric(5, EmptyGeneric))
   println((listInt ++ listInt2).toString)
 
-  println(listInt.flatmap((new Function1[Int, MyListGeneric[Int]]{
-    override def apply(elem: Int): MyListGeneric[Int] = {
-      new ConsGeneric[Int](elem, new ConsGeneric[Int](elem +1, EmptyGeneric))
-    }
-  })).toString)
+  println(listInt.flatmap((elem: Int) =>
+    new ConsGeneric[Int](elem, new ConsGeneric[Int](elem + 1, EmptyGeneric))
+  ).toString)
 
   println(cloneIntLins == listInt)
-
 
 
 
