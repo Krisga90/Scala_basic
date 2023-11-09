@@ -1,12 +1,5 @@
 package lectures_part_2_oop
 
-trait MyPredicate[-T]{
-  def test(elem: T): Boolean
-}
-
-trait MyTransformer[-T, B]{
-  def transform(elem: T): B
-}
 
 //[B >: A](element: B): MyList[B]
 abstract class MyListGeneric[+A] {
@@ -21,9 +14,10 @@ abstract class MyListGeneric[+A] {
     "[" + printElements + "]"
   }
 
-  def map[B](transformer: MyTransformer[A, B]): MyListGeneric[B]
-  def flatmap[B](transformer: MyTransformer[A, MyListGeneric[B]]): MyListGeneric[B]
-  def filter(predicate: MyPredicate[A]): MyListGeneric[A]
+  // higher-order functions
+  def map[B](transformer: A => B): MyListGeneric[B]
+  def flatmap[B](transformer: A => MyListGeneric[B]): MyListGeneric[B]
+  def filter(predicate: A => Boolean): MyListGeneric[A]
 
   //concatenation
   def ++[B >: A](list: MyListGeneric[B]): MyListGeneric[B]
@@ -37,11 +31,11 @@ case object EmptyGeneric extends MyListGeneric[Nothing] {
 
   def printElements: String = ""
 
-  def map[B](transformer: MyTransformer[Nothing, B]): MyListGeneric[B] = EmptyGeneric
+  def map[B](transformer: Nothing => B): MyListGeneric[B] = EmptyGeneric
 
-  def flatmap[B](transformer: MyTransformer[Nothing, MyListGeneric[B]]): MyListGeneric[B] = EmptyGeneric
+  def flatmap[B](transformer: Nothing => MyListGeneric[B]): MyListGeneric[B] = EmptyGeneric
 
-  def filter(predicate: MyPredicate[Nothing]): MyListGeneric[Nothing] = EmptyGeneric
+  def filter(predicate: Nothing => Boolean): MyListGeneric[Nothing] = EmptyGeneric
 
   def ++[B >: Nothing](list: MyListGeneric[B]): MyListGeneric[B] = {
     list
@@ -59,13 +53,13 @@ case class ConsGeneric[+A](h: A, t: MyListGeneric[A]) extends MyListGeneric[A] {
     else s"${h} ${t.printElements}"
   }
 
-  def map[B](transformer: MyTransformer[A, B]): MyListGeneric[B] = {
-    new ConsGeneric(transformer.transform(h), t.map(transformer))
+  def map[B](transformer: A => B): MyListGeneric[B] = {
+    new ConsGeneric(transformer(h), t.map(transformer))
   }
 
 
-  def filter(predicate: MyPredicate[A]): MyListGeneric[A] = {
-    if (predicate.test(h)) new ConsGeneric(h, t.filter(predicate))
+  def filter(predicate: A => Boolean): MyListGeneric[A] = {
+    if (predicate(h)) new ConsGeneric(h, t.filter(predicate))
     else t.filter(predicate)
 
 
@@ -75,8 +69,8 @@ case class ConsGeneric[+A](h: A, t: MyListGeneric[A]) extends MyListGeneric[A] {
     new ConsGeneric(h, t ++ list)
   }
 
-  def flatmap[B](transformer: MyTransformer[A, MyListGeneric[B]]): MyListGeneric[B] = {
-    transformer.transform(h) ++ t.flatmap(transformer)
+  def flatmap[B](transformer: A => MyListGeneric[B]): MyListGeneric[B] = {
+    transformer(h) ++ t.flatmap(transformer)
   }
 }
 
@@ -92,19 +86,19 @@ object ListTestGeneric extends App {
   println(listString.head)
   println(listString)
 
-  println(listInt.map(new MyTransformer[Int, Int]{
-    override def transform(elem: Int): Int = elem * 2
+  println(listInt.map(new Function1[Int, Int]{
+    override def apply(elem: Int): Int = elem * 2
   }).toString)
 
-  println(listInt.filter(new MyPredicate[Int]{
-    override def test(elem: Int): Boolean = elem % 2 == 0
+  println(listInt.filter(new Function1[Int, Boolean]{
+    override def apply(elem: Int): Boolean = elem % 2 == 0
   }).toString)
 
   val listInt2: MyListGeneric[Int] = ConsGeneric(4, ConsGeneric(5, EmptyGeneric))
   println((listInt ++ listInt2).toString)
 
-  println(listInt.flatmap((new MyTransformer[Int, MyListGeneric[Int]]{
-    override def transform(elem: Int): MyListGeneric[Int] = {
+  println(listInt.flatmap((new Function1[Int, MyListGeneric[Int]]{
+    override def apply(elem: Int): MyListGeneric[Int] = {
       new ConsGeneric[Int](elem, new ConsGeneric[Int](elem +1, EmptyGeneric))
     }
   })).toString)
