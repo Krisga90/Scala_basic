@@ -21,6 +21,14 @@ abstract class MyListGeneric[+A] {
 
   //concatenation
   def ++[B >: A](list: MyListGeneric[B]): MyListGeneric[B]
+
+  def foreach(func: (A => Unit)): Unit
+
+  def sort(func: (A,A) => Int): MyListGeneric[A]
+
+  def zipWith[B, C](list: MyListGeneric[B], zip: (A, B) => C): MyListGeneric[C]
+
+  def fold[B](start: B)(operator: (B, A) => B): B
 }
 
 case object EmptyGeneric extends MyListGeneric[Nothing] {
@@ -40,6 +48,19 @@ case object EmptyGeneric extends MyListGeneric[Nothing] {
   def ++[B >: Nothing](list: MyListGeneric[B]): MyListGeneric[B] = {
     list
   }
+  def foreach(func: (Nothing => Unit)): Unit = ()
+
+  def sort(func: (Nothing, Nothing) => Int) = EmptyGeneric
+
+  def zipWith[B, C](list: MyListGeneric[B], zip: (Nothing, B) => C): MyListGeneric[C] = {
+    if (!list.isEmpty) throw new RuntimeException("List do not have same length")
+    else return EmptyGeneric
+  }
+
+  def fold[B](start: B)(operator: (B, Nothing) => B): B = {
+    return start
+  }
+
 }
 
 case class ConsGeneric[+A](h: A, t: MyListGeneric[A]) extends MyListGeneric[A] {
@@ -72,6 +93,34 @@ case class ConsGeneric[+A](h: A, t: MyListGeneric[A]) extends MyListGeneric[A] {
   def flatmap[B](transformer: A => MyListGeneric[B]): MyListGeneric[B] = {
     transformer(h) ++ t.flatmap(transformer)
   }
+
+  def foreach(func: (A => Unit)): Unit ={
+    func(h)
+    t.foreach(func)
+  }
+
+  def sort(func: (A,A) => Int): MyListGeneric[A] = {
+    def insert(x: A, sortedList: MyListGeneric[A]): MyListGeneric[A]  = {
+      if(sortedList.isEmpty) new ConsGeneric(x, EmptyGeneric)
+      else if (func(h, tail.head) <= 0) new ConsGeneric(x, sortedList)
+      else new ConsGeneric(sortedList.head, insert(x, sortedList.tail))
+    }
+
+    val sortedTail = tail.sort(func)
+    insert(h, sortedTail)
+  }
+
+  def zipWith[B, C](list: MyListGeneric[B], zip: (A, B) => C): MyListGeneric[C] = {
+    if (list.isEmpty) throw new RuntimeException("List do not have same length")
+    else new ConsGeneric(zip(head, list.head), tail.zipWith(list.tail, zip))
+  }
+
+  def fold[B](start: B)(operator: (B, A) => B): B = {
+//    val newStart = operator(start, h)
+//    tail.fold(newStart)(operator)
+    tail.fold(operator(start, h))(operator)
+  }
+
 }
 
 object ListTestGeneric extends App {
@@ -102,6 +151,13 @@ object ListTestGeneric extends App {
 
   println(cloneIntLins == listInt)
 
+  cloneIntLins.foreach(println)
+  cloneIntLins.foreach(x => println(x)) // same
 
+  println(listInt.sort((x,y) => y - x))
+
+  println(listInt.zipWith(listString, "" +_ +"-" + _))
+
+  println(listInt.fold(1)(_ + _))
 
 }
