@@ -16,8 +16,8 @@ abstract class MyListGeneric[+A] {
 
   // higher-order functions
   def map[B](transformer: A => B): MyListGeneric[B]
-  def flatmap[B](transformer: A => MyListGeneric[B]): MyListGeneric[B]
-  def filter(predicate: A => Boolean): MyListGeneric[A]
+  def flatMap[B](transformer: A => MyListGeneric[B]): MyListGeneric[B]
+  def withFilter(predicate: A => Boolean): MyListGeneric[A]
 
   //concatenation
   def ++[B >: A](list: MyListGeneric[B]): MyListGeneric[B]
@@ -41,9 +41,9 @@ case object EmptyGeneric extends MyListGeneric[Nothing] {
 
   def map[B](transformer: Nothing => B): MyListGeneric[B] = EmptyGeneric
 
-  def flatmap[B](transformer: Nothing => MyListGeneric[B]): MyListGeneric[B] = EmptyGeneric
+  def flatMap[B](transformer: Nothing => MyListGeneric[B]): MyListGeneric[B] = EmptyGeneric
 
-  def filter(predicate: Nothing => Boolean): MyListGeneric[Nothing] = EmptyGeneric
+  def withFilter(predicate: Nothing => Boolean): MyListGeneric[Nothing] = EmptyGeneric
 
   def ++[B >: Nothing](list: MyListGeneric[B]): MyListGeneric[B] = {
     list
@@ -79,9 +79,9 @@ case class ConsGeneric[+A](h: A, t: MyListGeneric[A]) extends MyListGeneric[A] {
   }
 
 
-  def filter(predicate: A => Boolean): MyListGeneric[A] = {
-    if (predicate(h)) new ConsGeneric(h, t.filter(predicate))
-    else t.filter(predicate)
+  def withFilter(predicate: A => Boolean): MyListGeneric[A] = {
+    if (predicate(h)) new ConsGeneric(h, t.withFilter(predicate))
+    else t.withFilter(predicate)
 
 
   }
@@ -90,8 +90,8 @@ case class ConsGeneric[+A](h: A, t: MyListGeneric[A]) extends MyListGeneric[A] {
     new ConsGeneric(h, t ++ list)
   }
 
-  def flatmap[B](transformer: A => MyListGeneric[B]): MyListGeneric[B] = {
-    transformer(h) ++ t.flatmap(transformer)
+  def flatMap[B](transformer: A => MyListGeneric[B]): MyListGeneric[B] = {
+    transformer(h) ++ t.flatMap(transformer)
   }
 
   def foreach(func: (A => Unit)): Unit ={
@@ -138,14 +138,14 @@ object ListTestGeneric extends App {
 //  println(listInt.map((x: Int) => x * 2).toString)
   println(listInt.map(_ * 2).toString)
 
-//  println(listInt.filter((x: Int) => x % 2 == 0).toString)
-  println(listInt.filter(_ % 2 == 0).toString)
+//  println(listInt.withFilter((x: Int) => x % 2 == 0).toString)
+  println(listInt.withFilter(_ % 2 == 0).toString)
 
 
   val listInt2: MyListGeneric[Int] = ConsGeneric(4, ConsGeneric(5, EmptyGeneric))
   println((listInt ++ listInt2).toString)
 
-  println(listInt.flatmap((elem: Int) =>
+  println(listInt.flatMap((elem: Int) =>
     new ConsGeneric[Int](elem, new ConsGeneric[Int](elem + 1, EmptyGeneric))
   ).toString)
 
@@ -160,4 +160,10 @@ object ListTestGeneric extends App {
 
   println(listInt.fold(1)(_ + _))
 
+  val combination = for {
+    n <- listInt if n % 2 == 1
+    char <- listString
+  } yield "" + n + char
+
+  println(combination)
 }
